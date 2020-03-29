@@ -28,17 +28,28 @@ def makerow(y,m,d,nums)
   [ jtoi(y), jtoi(m), jtoi(d), cases.size ] + cases
 end
 
-def write( data )
-  fn = Time.now.strftime( "%Y_%m_%d_%H_%M" )
-  FileUtils.mkdir_p( LOGDIR )
-  path = "#{LOGDIR}/#{fn}.csv"
-  CSV.open( path, "w" ) do |csv|
+def build(data)
+  CSV.generate do |csv|
     csv << %w( year month day count cases )
     data.each do |row|
       csv << row
     end
   end
-  puts( "update #{path}." )
+end
+
+def write( data )
+  fn = Time.now.strftime( "%Y_%m_%d_%H_%M" )
+  FileUtils.mkdir_p( LOGDIR )
+  text = build(data)
+  last = File.open( Dir.glob( File.join(LOGDIR, "*.csv" ) ).max, &:read )
+  if last == text 
+    puts( "same to the last data" )
+    return
+  end
+  File.open( "#{LOGDIR}/#{fn}.csv", "w" ) do |f|
+    f.write( text )
+  end
+  puts( "created #{path}." )
 end
 
 def check_cases(data)
