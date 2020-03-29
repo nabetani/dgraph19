@@ -4,11 +4,17 @@ from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 from datetime import datetime, date, timedelta
+from pathlib import Path
+
+
+def japanPath():
+    p = Path(__file__).parent.joinpath("logs")
+    return max(p.glob("*.csv"))
 
 
 def filenames():
     return {
-        "Japan": "logs/2020_03_29_16_40.csv"
+        "Japan": japanPath()
     }
 
 
