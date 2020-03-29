@@ -31,11 +31,26 @@ end
 def write( data )
   fn = Time.now.strftime( "%Y_%M_%d_%H_%m" )
   FileUtils.mkdir_p( LOGDIR )
-  CSV.open( "#{LOGDIR}/#{fn}.csv", "w" ) do |csv|
+  path = "#{LOGDIR}/#{fn}.csv"
+  CSV.open( path, "w" ) do |csv|
     csv << %w( year month day count cases )
     data.each do |row|
       csv << row
     end
+  end
+  puts( "update #{path}." )
+end
+
+def check_cases(data)
+  nums = data.map{ |e| e.drop(4) }.flatten.sort
+  first, last = nums.minmax
+  if [*first..last] != nums
+    $stderr.puts "minmax=(#{first}, #{last})"
+    lost = [*first..last] - nums
+    dupnum = nums.each_cons(2).select{ |a,b| a==b }
+    $stderr.puts "#{lost.inspect} are missing case"
+    $stderr.puts "#{dupnum.inspect} are dup case"
+    raise "unexpected case"
   end
 end
 
@@ -54,6 +69,7 @@ def main
   html.scan(pat1) do |m|
     data.push(makerow(*(0..3).map{ |e| m[e] }))
   end
+  check_cases(data)
   write( data.sort )
 end
 
