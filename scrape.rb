@@ -18,10 +18,15 @@ def main
     f.set_encoding("utf-8")
     f.read
   end
-  renum = "[０１２３４５６７８９0123456789]+"
-  html.scan( %r!(#{renum})月(#{renum})日公表分!) do |m|
+  renum = "０１２３４５６７８９0123456789"
+  html.scan( %r![\(（]([#{renum}]+)月([#{renum}]+)日公表分[\)）].{0,10}（国内死亡\s*(.{1,20})例目!) do |m|
     p m
   end
+  puts "-"*10
+  html.scan( %r!([#{renum}]+)年([#{renum}]+)月([#{renum}]+)日[^年月日]{50,400}死亡(.{1,20})例!) do |m|
+    p m
+  end
+
 
 
 
