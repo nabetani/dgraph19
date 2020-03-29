@@ -29,7 +29,7 @@ def makerow(y,m,d,nums)
 end
 
 def write( data )
-  fn = Time.now.strftime( "%Y_%M_%d_%H_%m" )
+  fn = Time.now.strftime( "%Y_%m_%d_%H_%M" )
   FileUtils.mkdir_p( LOGDIR )
   path = "#{LOGDIR}/#{fn}.csv"
   CSV.open( path, "w" ) do |csv|
