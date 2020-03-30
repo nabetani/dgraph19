@@ -46,7 +46,8 @@ def write( data )
     puts( "same to the last data" )
     return
   end
-  File.open( "#{LOGDIR}/#{fn}.csv", "w" ) do |f|
+  path = "#{LOGDIR}/#{fn}.csv"
+  File.open( path, "w" ) do |f|
     f.write( text )
   end
   puts( "created #{path}." )
