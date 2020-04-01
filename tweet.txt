@@ -1,4 +1,3 @@
 #Covid_19
 #DailyNewDeathsinJapan
-ソースは厚生労働省のページ。
-https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000121431_00086.html
+ソースは「新型コロナウイルスの更新情報」などの、厚生労働省内のページ。

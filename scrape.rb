@@ -4,11 +4,18 @@ require 'open-uri'
 require 'csv'
 require 'pry'
 require 'pp'
+require 'digest'
 
 HERE = File.split( __FILE__ )[0]
 LOGDIR = File.join( HERE, "logs" )
-def mhlw_url
+UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36"
+
+def mhlw_url_until_march_end
   "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000121431_00086.html"
+end
+
+def mhlw_url_after_april
+  "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/topics_shingata_09444.html"
 end
 
 def parse( html )
@@ -66,12 +73,64 @@ def check_cases(data)
   end
 end
 
-def main
-  html = open(mhlw_url) do |f|
+def get_after_april_html(url)
+  open(url ) do |f|
     f.set_encoding("utf-8")
     f.read
   end
-  renum = "０１２３４５６７８９0123456789"
+end
+
+def renum
+  "０１２３４５６７８９0123456789"
+end
+
+
+def get_after_april(url)
+  html = get_after_april_html( "https://www.mhlw.go.jp"+url)
+  doc = Nokogiri::HTML(html)
+  text = doc.xpath("//div").first.text
+  data=[]
+  sum = nil
+  text.scan(/([#{renum}]+)月([#{renum}]+)日[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
+    data.push( m.map{ |e| jtoi(e) } )
+  end
+  text.scan( /これまでに[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
+    sum = m.map{ |e| jtoi(e) }
+  end
+  return nil if data.empty?
+  if 1 < data.uniq.size 
+    raise data.inspect
+  end
+  s=[2020, *data[0], *sum]
+  pp s
+  s
+end
+
+def dayof(text)
+  m=/([#{renum}]+)年([#{renum}]+)月([#{renum}]+)日\s*掲載/.match(text)
+  return [0,0,0] unless m
+  [1,2,3].map{ |e| jtoi(m[e]) }
+end
+
+def after_april
+  html = get_after_april_html(mhlw_url_after_april)
+  doc = Nokogiri::HTML(html)
+  data = []
+  doc.xpath("//a").each do |node|
+    text = node.text
+    next if (dayof(text)<=>[2020,4,1])<0
+    next unless /患者等の発生/===text
+    next if /空港検疫/===text
+    data << get_after_april(node.attributes["href"].value)
+  end
+  data
+end
+
+def until_march_end
+  html = open(mhlw_url_until_march_end) do |f|
+    f.set_encoding("utf-8")
+    f.read
+  end
   data = []
   pat0 = %r![\(（]([#{renum}]+)月([#{renum}]+)日公表分[\)）].{0,10}（国内死亡\s*(.{1,20})例目!
   html.scan(pat0) do |m|
@@ -82,6 +141,11 @@ def main
     data.push(makerow(*(0..3).map{ |e| m[e] }))
   end
   check_cases(data)
+  data
+end
+
+def main
+  data = after_april + until_march_end
   write( data.sort )
 end
 
