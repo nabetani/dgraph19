@@ -49,7 +49,7 @@ def write( data )
   FileUtils.mkdir_p( LOGDIR )
   text = build(data)
   last = File.open( Dir.glob( File.join(LOGDIR, "*.csv" ) ).max, &:read )
-  if last == text 
+  if last == text
     puts( "same to the last data" )
     return
   end
@@ -97,6 +97,7 @@ def get_after_april(url)
   text.scan( /これまでに[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
     sum = m.map{ |e| jtoi(e) }
   end
+  sum ||= 0
   return nil if data.empty?
   if 1 < data.uniq.size 
     raise data.inspect
@@ -123,7 +124,7 @@ def after_april
     next if /空港検疫/===text
     data << get_after_april(node.attributes["href"].value)
   end
-  data
+  data.compact
 end
 
 def until_march_end
