@@ -91,8 +91,11 @@ def get_after_april(url)
   text = doc.xpath("//div").first.text
   data=[]
   sum = nil
-  text.scan(/([#{renum}]+)月([#{renum}]+)日[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
+  text.scan(/([#{renum}]+)月([#{renum}]+)日[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)[^\r\n]+報告されました/) do |m|
     data.push( m.map{ |e| jtoi(e) } )
+  end
+  text.scan(/([#{renum}]+)月([#{renum}]+)日[^死\r\n]+報告されました/) do |m|
+    data.push( m.map{ |e| jtoi(e) }+[0] )
   end
   text.scan( /これまでに[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
     sum = m.map{ |e| jtoi(e) }
@@ -102,9 +105,7 @@ def get_after_april(url)
   if 1 < data.uniq.size 
     raise data.inspect
   end
-  s=[2020, *data[0], *sum]
-  pp s
-  s
+  [2020, *data[0], *sum]
 end
 
 def dayof(text)
@@ -124,7 +125,7 @@ def after_april
     next if /空港検疫/===text
     data << get_after_april(node.attributes["href"].value)
   end
-  data.compact
+  data
 end
 
 def until_march_end
@@ -146,7 +147,8 @@ def until_march_end
 end
 
 def main
-  data = after_april + until_march_end
+  data = (after_april + until_march_end).compact.sort.uniq
+  pp data
   write( data.sort )
 end
 
