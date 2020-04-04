@@ -49,7 +49,7 @@ def write( data )
   FileUtils.mkdir_p( LOGDIR )
   text = build(data)
   last = File.open( Dir.glob( File.join(LOGDIR, "*.csv" ) ).max, &:read )
-  if last == text 
+  if last == text
     puts( "same to the last data" )
     return
   end
@@ -91,19 +91,21 @@ def get_after_april(url)
   text = doc.xpath("//div").first.text
   data=[]
   sum = nil
-  text.scan(/([#{renum}]+)月([#{renum}]+)日[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
+  text.scan(/([#{renum}]+)月([#{renum}]+)日[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)[^\r\n]+報告されました/) do |m|
     data.push( m.map{ |e| jtoi(e) } )
+  end
+  text.scan(/([#{renum}]+)月([#{renum}]+)日[^死\r\n]+報告されました/) do |m|
+    data.push( m.map{ |e| jtoi(e) }+[0] )
   end
   text.scan( /これまでに[^\r\n]+死[^#{renum}]{0,10}([#{renum}]+)/) do |m|
     sum = m.map{ |e| jtoi(e) }
   end
+  sum ||= 0
   return nil if data.empty?
   if 1 < data.uniq.size 
     raise data.inspect
   end
-  s=[2020, *data[0], *sum]
-  pp s
-  s
+  [2020, *data[0], *sum]
 end
 
 def dayof(text)
@@ -140,13 +142,27 @@ def until_march_end
   html.scan(pat1) do |m|
     data.push(makerow(*(0..3).map{ |e| m[e] }))
   end
+  data.delete_if{ |x| ([2020,4,0]<=>x[0,3])<0 }
   check_cases(data)
   data
 end
 
+COLLECTION_LIST = [
+  [2020,4,1,3,60],
+  [2020,4,2,3,63],
+]
+
+def fix(data)
+  data.delete_if do |row|
+    COLLECTION_LIST.any?{ |c| c[0,3]==row[0,3] }
+  end
+  data + COLLECTION_LIST
+end
+
 def main
-  data = after_april + until_march_end
-  write( data.sort )
+  data = fix( (after_april + until_march_end).compact.sort.uniq ).sort
+  pp data
+  write( data )
 end
 
 main
