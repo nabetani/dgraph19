@@ -147,17 +147,16 @@ def until_march_end
   data
 end
 
+COLLECTION_LIST = [
+  [2020,4,1,3,60],
+  [2020,4,2,3,63],
+]
+
 def fix(data)
   data.delete_if do |row|
-    case row[0,3].join("/")
-    when "2020/4/1", "2020/4/2"
-      true
-    else
-      false
-    end
+    COLLECTION_LIST.any?{ |c| c[0,3]==row[0,3] }
   end
-  data.push( [2020,4,1,3,60] )
-  data.push( [2020,4,2,3,63] )
+  data + COLLECTION_LIST
 end
 
 def main
