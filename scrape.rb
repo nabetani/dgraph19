@@ -142,14 +142,28 @@ def until_march_end
   html.scan(pat1) do |m|
     data.push(makerow(*(0..3).map{ |e| m[e] }))
   end
+  data.delete_if{ |x| ([2020,4,0]<=>x[0,3])<0 }
   check_cases(data)
   data
 end
 
+def fix(data)
+  data.delete_if do |row|
+    case row[0,3].join("/")
+    when "2020/4/1", "2020/4/2"
+      true
+    else
+      false
+    end
+  end
+  data.push( [2020,4,1,3,60] )
+  data.push( [2020,4,2,3,63] )
+end
+
 def main
-  data = (after_april + until_march_end).compact.sort.uniq
+  data = fix( (after_april + until_march_end).compact.sort.uniq ).sort
   pp data
-  write( data.sort )
+  write( data )
 end
 
 main
